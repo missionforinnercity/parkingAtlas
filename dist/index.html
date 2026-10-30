@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f2e8">
+  <meta name="description" content="A shared field atlas for parking facilities in inner-city Cape Town.">
+  <title>Cape Town Parking Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Kalam:wght@400;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <svg class="icon-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.25"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 16v4h14v-4"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M5 16v4h14v-4"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m4 16.5-.8 4.3 4.3-.8L19.8 7.7a2.7 2.7 0 0 0-3.8-3.8L4 16.5Z"/><path d="m14.5 5.4 4.1 4.1"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10m-7 6h4"/><circle cx="8" cy="6" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-location" viewBox="0 0 24 24"><path d="M20 10c0 5.5-8 11-8 11S4 15.5 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="m5 11 1.6-4.5A2.2 2.2 0 0 1 8.7 5h6.6a2.2 2.2 0 0 1 2.1 1.5L19 11l1.5 1.3v5h-17v-5L5 11Z"/><path d="M4 12h16M7 17v2m10-2v2"/><circle cx="7.5" cy="13.8" r=".8"/><circle cx="16.5" cy="13.8" r=".8"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6m-.5-5.5-9 9"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".7"/><circle cx="4" cy="12" r=".7"/><circle cx="4" cy="18" r=".7"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></symbol>
+  </svg>
+
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Cape Town Parking Atlas home">
+      <span class="brand-mark"><svg><use href="#i-pin"></use></svg><b>P</b></span>
+      <span class="brand-name">parking <span>atlas</span><small>INNER CITY · CAPE TOWN</small></span>
+    </a>
+    <div class="topbar-center">
+      <span class="eyebrow">FIELDWORK, MADE CLEAR</span>
+      <h1>Every space has a story.</h1>
+    </div>
+    <div class="top-actions">
+      <span class="save-state"><i class="save-dot"></i><span id="save-label">Saved on this device</span></span>
+      <span class="action-divider"></span>
+      <input id="import-file" type="file" accept=".xlsx,.xls,.csv" hidden>
+      <button class="button button-quiet" id="import-button" type="button"><svg><use href="#i-upload"></use></svg><span>Import Excel</span></button>
+      <button class="button button-dark" id="export-button" type="button"><svg><use href="#i-download"></use></svg><span>Download Excel</span></button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="list-panel panel">
+      <div class="panel-intro">
+        <div class="eyebrow-with-doodle"><span>YOUR FIELD GUIDE</span><i class="doodle-line"></i></div>
+        <div class="intro-heading-row">
+          <div><h2>Find a spot</h2><p>Little lots, big parkades, all in one place.</p></div>
+          <button class="add-button" id="add-button" type="button" title="Add a parking spot"><svg><use href="#i-plus"></use></svg></button>
+        </div>
+      </div>
+
+      <label class="search-box">
+        <svg><use href="#i-search"></use></svg>
+        <input id="search-input" type="search" placeholder="Try a name, street, or ID…" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <div class="filter-tabs" role="tablist" aria-label="Filter parking spots">
+        <button class="filter-tab active" data-filter="all" type="button" role="tab">All <span id="tab-all">45</span></button>
+        <button class="filter-tab" data-filter="review" type="button" role="tab">Needs a check <span id="tab-review">28</span></button>
+        <button class="filter-tab" data-filter="checked" type="button" role="tab">Checked <span id="tab-checked">17</span></button>
+      </div>
+
+      <div class="select-grid">
+        <label class="select-wrap"><span>PRECINCT</span><select id="precinct-filter"><option value="all">All precincts</option></select></label>
+        <label class="select-wrap"><span>MAP AREA</span><select id="area-filter"><option value="all">All map pins</option><option value="Yes">Inside study area</option><option value="edge">Edge or check</option></select></label>
+      </div>
+      <div class="select-grid select-grid-extra">
+        <label class="select-wrap"><span>FACILITY TYPE</span><select id="type-filter"><option value="all">All types</option><option value="garage">Garages</option><option value="surface">Surface lots</option><option value="other">Other</option></select></label>
+        <label class="select-wrap"><span>ACCESS STATUS</span><select id="status-filter"><option value="all">All access statuses</option></select></label>
+      </div>
+
+      <div class="list-summary">
+        <span><b id="visible-count">45</b> spots shown</span>
+        <label class="sort-wrap"><span>Sort</span><select id="sort-select" aria-label="Sort parking spots"><option value="review">Review priority</option><option value="name">Name A–Z</option><option value="precinct">Precinct</option></select></label>
+      </div>
+
+      <div class="spot-list" id="spot-list" aria-live="polite"></div>
+      <div class="list-footer">
+        <span class="footer-pin"><svg><use href="#i-pin"></use></svg></span>
+        <span>Made for the curious.<br><b>Built for the next site visit.</b></span>
+        <span class="footer-count" id="footer-count">45</span>
+      </div>
+    </aside>
+
+    <section class="map-panel panel" aria-label="Parking map">
+      <div class="map-heading">
+        <div>
+          <div class="map-kicker"><span class="live-dot"></span> CAPE TOWN CBD</div>
+          <h2>Follow the little green pins <span class="hand-arrow">↘</span></h2>
+          <p>Tap any pin to open its field notes.</p>
+        </div>
+        <div class="map-actions">
+          <button class="map-action" id="fit-map" type="button" title="Show all spots"><svg><use href="#i-location"></use></svg><span>Show all</span></button>
+          <button class="map-action" id="reset-filters" type="button" title="Clear all filters"><svg><use href="#i-filter"></use></svg><span>Clear filters</span></button>
+        </div>
+      </div>
+      <div class="map-canvas-wrap">
+        <div id="map" role="application" aria-label="Interactive map of inner-city Cape Town parking spots"></div>
+        <div class="map-top-note"><span class="north-star">N</span><span>North is up<br><b>mostly.</b></span></div>
+        <div class="map-legend">
+          <span class="legend-title">A QUICK KEY</span>
+          <span><i class="legend-dot dot-confirmed"></i> Public</span>
+          <span><i class="legend-dot dot-research"></i> Researching</span>
+          <span><i class="legend-dot dot-unclear"></i> Unclear</span>
+        </div>
+        <button class="reference-card" id="reference-button" type="button" aria-label="Open parking lot layout reference">
+          <img src="./assets/parking-layout-reference.png" alt="">
+          <span class="reference-copy"><small>A LITTLE INSPIRATION</small><b>Well-marked bays <svg><use href="#i-arrow"></use></svg></b></span>
+        </button>
+        <div class="map-hint" id="map-hint"><svg><use href="#i-spark"></use></svg><span>Choose the + button, then tap the map to drop a pin.</span><button type="button" aria-label="Dismiss tip" id="dismiss-hint"><svg><use href="#i-close"></use></svg></button></div>
+      </div>
+      <div class="map-footer">
+        <span><svg><use href="#i-pin"></use></svg><b id="map-count">45</b> places on your map</span>
+        <span class="map-footer-note"><i></i> Pin positions are research coordinates · © OpenStreetMap</span>
+      </div>
+    </section>
+
+    <aside class="detail-panel panel" id="detail-panel" aria-label="Selected parking spot details">
+      <div class="detail-head">
+        <div><span class="eyebrow">FIELD NOTES</span><h2 id="detail-heading">A closer look</h2></div>
+        <div class="detail-head-actions">
+          <button id="edit-button" class="edit-button" type="button"><svg><use href="#i-edit"></use></svg><span>Edit details</span></button>
+          <button id="close-detail" class="icon-button close-detail" type="button" aria-label="Close details"><svg><use href="#i-close"></use></svg></button>
+        </div>
+      </div>
+      <div id="detail-content" class="detail-content">
+        <div class="empty-detail">
+          <div class="empty-illustration"><span>✳</span><svg><use href="#i-pin"></use></svg></div>
+          <h3>Pick a pin to begin</h3>
+          <p>Choose a spot on the map or from the list to see its address, rates, notes, and what still needs checking.</p>
+          <div class="empty-doodle">one little field trip at a time <span>↗</span></div>
+        </div>
+      </div>
+      <div class="detail-bottom">
+        <span class="bottom-scribble">A fieldwork favorite</span>
+        <span><svg><use href="#i-spark"></use></svg>Keep the good notes coming.</span>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="editor-backdrop" hidden>
+    <section class="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <header class="editor-head">
+        <div class="editor-title-wrap"><span class="editor-pin"><svg><use href="#i-pin"></use></svg></span><div><span class="eyebrow">A FEW GOOD DETAILS</span><h2 id="editor-title">Edit this parking spot</h2><p>Change what you know. Leave the rest for the next visit.</p></div></div>
+        <button class="icon-button" id="close-editor" type="button" aria-label="Close editor"><svg><use href="#i-close"></use></svg></button>
+      </header>
+      <form id="editor-form" autocomplete="off">
+        <div id="editor-fields" class="editor-fields"></div>
+        <footer class="editor-footer"><span>Changes save to this device right away.</span><div><button class="button button-quiet" id="cancel-editor" type="button">Cancel</button><button class="button button-dark" type="submit">Save field notes <svg><use href="#i-arrow"></use></svg></button></div></footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop reference-backdrop" id="reference-backdrop" hidden>
+    <section class="reference-modal" role="dialog" aria-modal="true" aria-labelledby="reference-title">
+      <button class="icon-button reference-close" id="close-reference" type="button" aria-label="Close image"><svg><use href="#i-close"></use></svg></button>
+      <img src="./assets/parking-layout-reference.png" alt="Aerial view of a well-marked parking lot with clear aisles, marked bays, and landscaping">
+      <div><span class="eyebrow">VISUAL NOTE FROM THE BRIEF</span><h2 id="reference-title">Good parking is easy to read.</h2><p>A reference for tidy bays, clear circulation, and planting that softens a big hard surface.</p></div>
+    </section>
+  </div>
+</body>
+</html>
