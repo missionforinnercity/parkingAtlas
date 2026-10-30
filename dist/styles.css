@@ -59,6 +59,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
 .save-state { display: inline-flex; align-items: center; gap: 7px; padding-right: 10px; color: #728177; font-size: 10px; white-space: nowrap; }
 .save-dot, .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #76a17f; box-shadow: 0 0 0 3px rgba(118, 161, 127, .14); }
+.save-state.is-offline { color: #a1664e; }
+.save-state.is-offline .save-dot { background: #d28a65; box-shadow: 0 0 0 3px rgba(210, 138, 101, .14); }
 .action-divider { height: 28px; width: 1px; margin: 0 3px 0 0; background: var(--line); }
 .button { min-height: 39px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 700; transition: transform .16s, background .16s, border-color .16s; white-space: nowrap; }
 .button svg { width: 16px; height: 16px; }

@@ -1,0 +1,20 @@
+{
+  "name": "parking-atlas",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Shared Cape Town parking atlas with MongoDB storage",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "mongodb": "^7.7.0"
+  }
+}

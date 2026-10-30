@@ -110,7 +110,8 @@
     draftIsNew: false,
     toastTimer: null,
     toastAction: null,
-    pendingDeleteId: null
+    pendingDeleteId: null,
+    apiAvailable: false
   };
 
   const byId = function (id) { return document.getElementById(id); };
@@ -584,13 +585,83 @@
   function persistData(announce) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.spots));
-      byId("save-label").textContent = "Saved on this device";
-      if (announce !== false) showToast("Your field notes are saved on this device.");
+      byId("save-label").textContent = state.apiAvailable ? "Shared atlas synced" : "Saved on this device";
+      byId("save-label").parentElement.classList.toggle("is-offline", !state.apiAvailable);
+      if (announce !== false && !state.apiAvailable) showToast("Your field notes are saved on this device.");
       return true;
     } catch (error) {
       byId("save-label").textContent = "Could not save locally";
       if (announce !== false) showToast("This browser could not save the changes. Try exporting a copy.");
       return false;
+    }
+  }
+
+  function setApiStatus(available, label) {
+    state.apiAvailable = available;
+    byId("save-label").textContent = label || (available ? "Shared atlas connected" : "Saved on this device");
+    byId("save-label").parentElement.classList.toggle("is-offline", !available);
+  }
+
+  async function sendToSharedAtlas(url, method, body) {
+    const response = await fetch(url, {
+      method: method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: "same-origin"
+    });
+    if (!response.ok) {
+      let message = "The shared save could not be completed.";
+      try {
+        const result = await response.json();
+        if (result && result.error) message = result.error;
+      } catch (error) {}
+      throw new Error(message);
+    }
+    return response;
+  }
+
+  async function syncSpot(spot, method, announce) {
+    if (!state.apiAvailable) {
+      if (announce) showToast("Saved on this device. Open the app on its shared Node server to sync changes.");
+      return;
+    }
+    setApiStatus(true, "Syncing shared atlas…");
+    try {
+      const url = method === "POST" ? "/api/spots" : "/api/spots/" + encodeURIComponent(clean(spot["ID"]));
+      await sendToSharedAtlas(url, method, spot);
+      setApiStatus(true, "Shared atlas synced");
+      if (announce) showToast("Saved to the shared atlas.");
+    } catch (error) {
+      setApiStatus(false, "Shared sync unavailable");
+      showToast("Saved on this device; the shared save did not finish. Check the connection before closing this page.");
+    }
+  }
+
+  async function syncDeletedSpot(id) {
+    if (!state.apiAvailable) return;
+    setApiStatus(true, "Syncing shared atlas…");
+    try {
+      await sendToSharedAtlas("/api/spots/" + encodeURIComponent(id), "DELETE");
+      setApiStatus(true, "Shared atlas synced");
+    } catch (error) {
+      setApiStatus(false, "Shared sync unavailable");
+      showToast("Saved on this device; the shared delete did not finish. Check the connection before closing this page.");
+    }
+  }
+
+  async function syncImportedSpots(records) {
+    if (!state.apiAvailable) {
+      showToast("Imported on this device. Open the app on its shared Node server to sync changes.");
+      return;
+    }
+    setApiStatus(true, "Syncing shared atlas…");
+    try {
+      await sendToSharedAtlas("/api/spots/import", "PUT", { spots: records });
+      setApiStatus(true, "Shared atlas synced");
+      showToast("Imported " + records.length + " parking spots to the shared atlas.");
+    } catch (error) {
+      setApiStatus(false, "Shared sync unavailable");
+      showToast("Imported on this device; the shared import did not finish. Check the connection before closing this page.");
     }
   }
 
@@ -748,6 +819,7 @@
     clearAllFilters();
     renderEverything();
     persistData(false);
+    syncSpot(spot, "PUT", false);
     document.body.classList.add("is-detail-open");
     if (state.map) {
       const point = coordinatesOf(spot);
@@ -773,6 +845,7 @@
     clearAllFilters();
     renderEverything();
     persistData(false);
+    syncDeletedSpot(originalId);
     if (!state.selectedId) document.body.classList.remove("is-detail-open");
     else document.body.classList.add("is-detail-open");
     if (state.map) fitMap();
@@ -893,7 +966,8 @@
       document.querySelectorAll(".filter-tab").forEach(function (tab) { tab.classList.toggle("active", tab.dataset.filter === "all"); });
       closeEditor();
       renderEverything();
-      persistData();
+      persistData(false);
+      syncSpot(updated, wasNew ? "POST" : "PUT", true);
       document.body.classList.add("is-detail-open");
       if (state.map) {
         const point = coordinatesOf(updated);
@@ -973,8 +1047,8 @@
         byId("status-filter").value = "all";
         document.querySelectorAll(".filter-tab").forEach(function (tab) { tab.classList.toggle("active", tab.dataset.filter === "all"); });
         renderEverything();
-        persistData();
-        showToast("Imported " + state.spots.length + " parking spots.");
+        persistData(false);
+        syncImportedSpots(state.spots);
       } catch (error) {
         showToast(error.message || "I could not read that spreadsheet.");
       } finally {
@@ -1036,15 +1110,31 @@
 
   async function start() {
     let rows = [];
+    let loadedFromServer = false;
     try {
-      const response = await fetch("./spots.json");
-      if (response.ok) rows = await response.json();
+      const response = await fetch("/api/spots", { credentials: "same-origin" });
+      if (response.ok) {
+        const sharedRows = await response.json();
+        if (!Array.isArray(sharedRows)) throw new Error("The shared spot list is invalid.");
+        rows = sharedRows;
+        loadedFromServer = true;
+        setApiStatus(true, "Shared atlas connected");
+      }
     } catch (e) {
       rows = [];
     }
+    if (!loadedFromServer) {
+      setApiStatus(false, "Saved on this device");
+      try {
+        const response = await fetch("./spots.json");
+        if (response.ok) rows = await response.json();
+      } catch (e) {
+        rows = [];
+      }
+    }
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      if (!loadedFromServer && saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) rows = parsed;
       }
@@ -1052,6 +1142,7 @@
       byId("save-label").textContent = "Local notes unavailable";
     }
     state.spots = rows.map(function (row, index) { return normalizeRecord(row, index); });
+    if (loadedFromServer) persistData(false);
     const first = state.spots.find(function (spot) { return !isChecked(spot); }) || state.spots[0];
     state.selectedId = first ? clean(first["ID"]) : null;
     setupEvents();
