@@ -259,6 +259,17 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .section-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 9px; color: #a09f8e; font-size: 7px; font-weight: 700; letter-spacing: .16em; }
 .section-label .sketch-underline { width: 30px; height: 5px; border-top: 1px solid #c4aa77; border-radius: 50%; transform: rotate(-4deg); }
 .facts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 8px; }
+.fact-wide { grid-column: 1 / -1; }
+.streetview-fact { margin-top: 2px; padding-top: 9px; border-top: 1px dashed #e1e3d8; }
+.streetview-link { min-height: 42px; display: flex; align-items: center; gap: 9px; padding: 6px 9px; border: 1px solid #dce7db; border-radius: 5px 4px 6px 5px; color: #557563; background: #eff4eb; text-decoration: none; transition: background .15s, border-color .15s, transform .15s; }
+.streetview-link:hover { transform: translateY(-1px); border-color: #b8cfbb; background: #e7f0e5; }
+.streetview-icon { width: 27px; height: 27px; flex: 0 0 27px; display: grid; place-items: center; border: 1px dashed #9bb39b; border-radius: 50%; color: #6a9270; background: #f8faf2; }
+.streetview-icon svg { width: 15px; height: 15px; }
+.streetview-link > span:nth-child(2) { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.streetview-link b { color: #41634e; font-size: 9px; }
+.streetview-link small { color: #91a092; font-size: 7px; }
+.streetview-link > svg:last-child { width: 13px; height: 13px; flex: 0 0 13px; color: #7a9980; }
+.streetview-unavailable { color: #9aa194; font-size: 8px; }
 .fact { min-width: 0; }
 .fact span { display: block; margin-bottom: 3px; color: #9aa195; font-size: 7px; }
 .fact b { display: block; overflow: hidden; color: #51665a; font-size: 9px; font-weight: 600; line-height: 1.4; text-overflow: ellipsis; overflow-wrap: anywhere; }

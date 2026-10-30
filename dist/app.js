@@ -478,6 +478,9 @@
     const daily = summaryValue(spot["Daily / max rate (ZAR)"]);
     const coords = coordinatesOf(spot);
     const mapsUrl = coords ? "https://www.google.com/maps?q=" + encodeURIComponent(coords[0] + "," + coords[1]) : "";
+    const streetViewUrl = coords
+      ? "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + encodeURIComponent(coords[0] + "," + coords[1])
+      : "";
     const source = validUrl(spot["Source URL"]);
     const website = displayWebsite(spot["Website / booking"]);
     const phone = clean(spot["Phone"]);
@@ -497,6 +500,11 @@
       ? '<a class="source-link" href="' + escapeHtml(mapsUrl) + '" target="_blank" rel="noreferrer">' +
         escapeHtml(Number(coords[0]).toFixed(5) + ", " + Number(coords[1]).toFixed(5)) + icon("external") + "</a>"
       : '<span class="fact">No coordinates yet</span>';
+    const streetView = streetViewUrl
+      ? '<a class="streetview-link" href="' + escapeHtml(streetViewUrl) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="streetview-icon">' + icon("streetview") + '</span><span><b>Open Street View</b><small>See the closest street-level panorama</small></span>' +
+        icon("external") + "</a>"
+      : '<span class="streetview-unavailable">Add coordinates to open Street View.</span>';
     const contactParts = [];
     if (phone && phone.toLowerCase() !== "unconfirmed") contactParts.push('<div class="fact"><span>Phone</span><b>' + escapeHtml(phone) + "</b></div>");
     if (email && email.toLowerCase() !== "unconfirmed") contactParts.push('<div class="fact"><span>Email</span><b>' + escapeHtml(email) + "</b></div>");
@@ -527,7 +535,8 @@
       '<div class="fact"><span>Cross-check</span><b>' + escapeHtml(checkLabel) + "</b></div>" +
       '<div class="fact"><span>Checked on</span><b>' + escapeHtml(displayValue(spot["Date checked"], "Date not recorded")) + "</b></div>" +
       '<div class="fact"><span>Map area</span><b>' + escapeHtml(displayValue(spot["Inside map area?"])) + "</b></div>" +
-      '<div class="fact"><span>Pin coordinates</span><b>' + location + "</b></div></div></section>" +
+      '<div class="fact"><span>Pin coordinates</span><b>' + location + "</b></div>" +
+      '<div class="fact fact-wide streetview-fact"><span>STREET-LEVEL LOOK</span>' + streetView + "</div></div></section>" +
       '<section class="detail-section"><h3 class="section-label">NOTES FOR THE NEXT VISIT <i class="sketch-underline"></i></h3>' + noteHtml + "</section>" +
       '<section class="detail-section"><h3 class="section-label">CONTACT & SOURCES <i class="sketch-underline"></i></h3><div class="facts-grid">' +
       contactHtml + '<div class="fact"><span>Research source</span><b>' + sourceLink + "</b></div></div>" +
