@@ -108,7 +108,9 @@
     placing: false,
     draft: null,
     draftIsNew: false,
-    toastTimer: null
+    toastTimer: null,
+    toastAction: null,
+    pendingDeleteId: null
   };
 
   const byId = function (id) { return document.getElementById(id); };
@@ -459,6 +461,7 @@
     if (!spot) {
       byId("detail-heading").textContent = "A closer look";
       byId("edit-button").disabled = true;
+      byId("delete-button").disabled = true;
       detailContent.innerHTML = '<div class="detail-placeholder"><div class="empty-detail">' +
         '<div class="empty-illustration"><span>✳</span>' + icon("pin") + '</div>' +
         '<h3>Pick a pin to begin</h3><p>Choose a spot on the map or from the list to see its address, rates, notes, and what still needs checking.</p>' +
@@ -466,6 +469,7 @@
       return;
     }
     byId("edit-button").disabled = false;
+    byId("delete-button").disabled = false;
     byId("detail-heading").textContent = "Spot details";
     const kind = markerClass(spot);
     const checked = isChecked(spot);
@@ -552,22 +556,32 @@
     renderMarkers();
   }
 
-  function showToast(message) {
+  function showToast(message, actionLabel, actionCallback) {
     const toast = byId("toast");
-    toast.textContent = message;
+    const action = byId("toast-action");
+    byId("toast-message").textContent = message;
+    state.toastAction = typeof actionCallback === "function" ? actionCallback : null;
+    action.hidden = !state.toastAction;
+    action.textContent = actionLabel || "";
     toast.classList.add("visible");
     window.clearTimeout(state.toastTimer);
-    state.toastTimer = window.setTimeout(function () { toast.classList.remove("visible"); }, 2600);
+    state.toastTimer = window.setTimeout(function () {
+      toast.classList.remove("visible");
+      state.toastAction = null;
+      action.hidden = true;
+    }, state.toastAction ? 5000 : 2600);
   }
 
-  function persistData() {
+  function persistData(announce) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.spots));
       byId("save-label").textContent = "Saved on this device";
-      showToast("Your field notes are saved on this device.");
+      if (announce !== false) showToast("Your field notes are saved on this device.");
+      return true;
     } catch (error) {
       byId("save-label").textContent = "Could not save locally";
-      showToast("This browser could not save the changes. Try exporting a copy.");
+      if (announce !== false) showToast("This browser could not save the changes. Try exporting a copy.");
+      return false;
     }
   }
 
@@ -682,8 +696,80 @@
     if (window.innerWidth <= 920) byId("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  function closeReference() {
-    byId("reference-backdrop").hidden = true;
+  function requestDelete() {
+    const spot = currentSpot();
+    if (!spot) return;
+    state.pendingDeleteId = clean(spot["ID"]);
+    byId("delete-target").textContent = clean(spot["Facility"]) + " · " + clean(spot["ID"]);
+    byId("delete-backdrop").hidden = false;
+    document.body.classList.add("modal-open");
+    window.setTimeout(function () { byId("confirm-delete").focus(); }, 30);
+  }
+
+  function closeDeleteDialog() {
+    byId("delete-backdrop").hidden = true;
+    document.body.classList.remove("modal-open");
+    state.pendingDeleteId = null;
+  }
+
+  function clearAllFilters() {
+    state.filter = "all";
+    state.search = "";
+    state.precinct = "all";
+    state.area = "all";
+    state.type = "all";
+    state.status = "all";
+    byId("search-input").value = "";
+    byId("precinct-filter").value = "all";
+    byId("area-filter").value = "all";
+    byId("type-filter").value = "all";
+    byId("status-filter").value = "all";
+    document.querySelectorAll(".filter-tab").forEach(function (tab) {
+      tab.classList.toggle("active", tab.dataset.filter === "all");
+    });
+  }
+
+  function restoreDeletedSpot(spot, index, originalId) {
+    if (state.spots.some(function (item) { return clean(item["ID"]) === clean(spot["ID"]); })) {
+      spot["ID"] = nextSpotId();
+    }
+    const restoredId = clean(spot["ID"]);
+    state.spots.splice(Math.min(index, state.spots.length), 0, spot);
+    state.selectedId = restoredId;
+    clearAllFilters();
+    renderEverything();
+    persistData(false);
+    document.body.classList.add("is-detail-open");
+    if (state.map) {
+      const point = coordinatesOf(spot);
+      if (point) state.map.setView(point, Math.max(state.map.getZoom(), 15), { animate: true });
+    }
+    showToast(restoredId === originalId ? "Spot restored." : "Spot restored as " + restoredId + ".");
+  }
+
+  function confirmDelete() {
+    const id = state.pendingDeleteId;
+    const index = state.spots.findIndex(function (spot) { return clean(spot["ID"]) === id; });
+    if (index < 0) {
+      closeDeleteDialog();
+      return;
+    }
+    const removed = state.spots.splice(index, 1)[0];
+    const removedName = clean(removed["Facility"]) || "Parking spot";
+    const originalId = clean(removed["ID"]);
+    closeDeleteDialog();
+    state.selectedId = state.spots.length
+      ? clean(state.spots[Math.min(index, state.spots.length - 1)]["ID"])
+      : null;
+    clearAllFilters();
+    renderEverything();
+    persistData(false);
+    if (!state.selectedId) document.body.classList.remove("is-detail-open");
+    else document.body.classList.add("is-detail-open");
+    if (state.map) fitMap();
+    showToast(removedName + " removed.", "Undo", function () {
+      restoreDeletedSpot(removed, index, originalId);
+    });
   }
 
   function setupEvents() {
@@ -747,6 +833,21 @@
       const spot = currentSpot();
       if (spot) openEditor(spot, false);
     });
+    byId("delete-button").addEventListener("click", requestDelete);
+    byId("cancel-delete").addEventListener("click", closeDeleteDialog);
+    byId("confirm-delete").addEventListener("click", confirmDelete);
+    byId("delete-backdrop").addEventListener("click", function (event) {
+      if (event.target === byId("delete-backdrop")) closeDeleteDialog();
+    });
+    byId("toast-action").addEventListener("click", function () {
+      const callback = state.toastAction;
+      if (!callback) return;
+      state.toastAction = null;
+      window.clearTimeout(state.toastTimer);
+      byId("toast").classList.remove("visible");
+      byId("toast-action").hidden = true;
+      callback();
+    });
     byId("close-detail").addEventListener("click", function () { document.body.classList.remove("is-detail-open"); });
     byId("editor-form").addEventListener("submit", function (event) {
       event.preventDefault();
@@ -798,11 +899,6 @@
     byId("import-button").addEventListener("click", function () { byId("import-file").click(); });
     byId("import-file").addEventListener("change", importWorkbook);
     byId("export-button").addEventListener("click", exportWorkbook);
-    byId("reference-button").addEventListener("click", function () { byId("reference-backdrop").hidden = false; });
-    byId("close-reference").addEventListener("click", closeReference);
-    byId("reference-backdrop").addEventListener("click", function (event) {
-      if (event.target === byId("reference-backdrop")) closeReference();
-    });
     byId("dismiss-hint").addEventListener("click", function () { byId("map-hint").classList.add("hidden"); });
     document.addEventListener("keydown", function (event) {
       if (event.key === "/" && !event.ctrlKey && !event.metaKey && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
@@ -811,7 +907,7 @@
       }
       if (event.key === "Escape") {
         closeEditor();
-        closeReference();
+        closeDeleteDialog();
         document.body.classList.remove("is-detail-open");
         if (state.placing) {
           state.placing = false;

@@ -85,9 +85,9 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .intro-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 7px; }
 .intro-heading-row h2, .map-heading h2, .detail-head h2 { margin: 0; font-family: "Manrope", sans-serif; font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing: -.055em; color: var(--ink); }
 .intro-heading-row p { margin: 5px 0 0; font-size: 10px; color: #89928a; }
-.add-button { width: 35px; height: 35px; flex: 0 0 35px; display: grid; place-items: center; border: 1px dashed #91ad98; border-radius: 50%; color: var(--green); background: #eef3eb; transition: transform .18s, background .18s; }
+.add-button { min-width: 86px; height: 32px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 9px; border: 1px dashed #91ad98; border-radius: 5px 6px 4px 6px; color: var(--green); background: #eef3eb; font-family: "Kalam", cursive; font-size: 11px; transform: rotate(-1deg); transition: transform .18s, background .18s; }
 .add-button svg { width: 17px; }
-.add-button:hover { transform: rotate(90deg); background: #e0eddf; }
+.add-button:hover { transform: rotate(0) translateY(-1px); background: #e0eddf; }
 
 .search-box { height: 37px; display: flex; align-items: center; gap: 8px; margin: 0 17px 14px; padding: 0 10px; border: 1px solid #dedfd5; border-radius: 5px; color: #9ba296; background: white; }
 .search-box svg { flex: 0 0 16px; width: 16px; height: 16px; }
@@ -179,13 +179,6 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .dot-confirmed { color: #568466; background: #619273; }
 .dot-research { color: #bf9148; background: #d4a453; }
 .dot-unclear { color: #b55f4d; background: #c4735c; }
-.reference-card { position: absolute; z-index: 500; right: 13px; bottom: 13px; display: flex; align-items: center; gap: 9px; width: 163px; min-height: 58px; padding: 6px; border: 1px solid #e0dfd3; border-radius: 5px; text-align: left; background: rgba(251, 250, 244, .95); box-shadow: 0 3px 9px rgba(53, 73, 56, .1); transform: rotate(.7deg); transition: transform .18s, box-shadow .18s; }
-.reference-card:hover { z-index: 501; transform: rotate(0) translateY(-2px); box-shadow: 0 6px 14px rgba(53, 73, 56, .16); }
-.reference-card img { width: 49px; height: 44px; flex: 0 0 49px; border-radius: 3px; object-fit: cover; filter: saturate(.8); }
-.reference-copy { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.reference-copy small { color: #a19b82; font-size: 6px; font-weight: 700; letter-spacing: .1em; white-space: nowrap; }
-.reference-copy b { display: flex; align-items: center; gap: 3px; color: #546b5b; font-family: "Kalam", cursive; font-size: 11px; font-weight: 400; white-space: nowrap; }
-.reference-copy svg { width: 12px; height: 12px; color: #7b9b7f; }
 .map-hint { position: absolute; z-index: 500; top: 13px; right: 13px; display: flex; align-items: center; gap: 7px; max-width: 225px; padding: 7px 8px; border: 1px solid #e2dcc6; border-radius: 5px; color: #866e49; background: rgba(255, 251, 237, .93); box-shadow: 0 2px 6px rgba(80, 70, 48, .07); font-family: "Kalam", cursive; font-size: 9px; line-height: 1.25; transform: rotate(.4deg); pointer-events: auto; }
 .map-hint > svg { width: 15px; height: 15px; flex: 0 0 15px; color: #b08e4c; }
 .map-hint button { width: 18px; height: 18px; flex: 0 0 18px; display: grid; place-items: center; margin-left: auto; padding: 0; border: 0; color: #ae9c75; background: transparent; }
@@ -221,6 +214,10 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .edit-button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px; border: 1px solid #d9e2d7; border-radius: 4px; color: #597765; background: #f2f6ee; font-size: 8px; font-weight: 700; white-space: nowrap; }
 .edit-button svg { width: 13px; height: 13px; }
 .edit-button:hover { background: #e9f2e7; border-color: #b8cdb8; }
+.delete-button { width: 29px; height: 29px; display: grid; place-items: center; padding: 0; border: 1px solid #eadbd3; border-radius: 50%; color: #b46d5a; background: #fbf3ef; }
+.delete-button svg { width: 14px; height: 14px; }
+.delete-button:hover:not(:disabled) { border-color: #d7aa9c; color: #a84f3d; background: #f8e8e1; }
+.delete-button:disabled { opacity: .38; cursor: default; }
 .icon-button { width: 29px; height: 29px; display: grid; place-items: center; padding: 0; border: 1px solid #e3e4dc; border-radius: 50%; color: #829186; background: transparent; }
 .icon-button svg { width: 15px; height: 15px; }
 .icon-button:hover { color: #4f715e; background: #f0f4ee; border-color: #c5d3c6; }
@@ -273,8 +270,11 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .source-link svg { width: 12px; height: 12px; flex: 0 0 12px; }
 .coordinate-note { margin-top: 8px; color: #9ca195; font-size: 7px; }
 
-.toast { position: fixed; z-index: 2000; left: 50%; bottom: 22px; max-width: calc(100vw - 30px); padding: 10px 15px; border: 1px solid rgba(230, 238, 222, .2); border-radius: 5px; color: #fffdf4; background: #254f3e; box-shadow: 0 6px 20px rgba(26, 54, 41, .22); font-size: 10px; opacity: 0; transform: translate(-50%, 12px); transition: opacity .2s, transform .2s; pointer-events: none; }
-.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+.toast { position: fixed; z-index: 3200; left: 50%; bottom: 22px; max-width: calc(100vw - 30px); display: flex; align-items: center; gap: 14px; padding: 9px 11px 9px 15px; border: 1px solid rgba(230, 238, 222, .2); border-radius: 5px; color: #fffdf4; background: #254f3e; box-shadow: 0 6px 20px rgba(26, 54, 41, .22); font-size: 10px; opacity: 0; transform: translate(-50%, 12px); transition: opacity .2s, transform .2s; pointer-events: none; }
+.toast.visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { padding: 4px 7px; border: 0; border-radius: 3px; color: #f5d891; background: rgba(255,255,255,.1); font-size: 9px; font-weight: 700; }
+.toast button:hover { color: #fff2cb; background: rgba(255,255,255,.18); }
+.toast button[hidden] { display: none; }
 .modal-backdrop { position: fixed; z-index: 3000; inset: 0; display: grid; place-items: center; padding: 22px; background: rgba(26, 45, 36, .44); backdrop-filter: blur(3px); }
 .modal-backdrop[hidden] { display: none; }
 .editor-modal { width: min(860px, 100%); max-height: min(92vh, 880px); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e3e2d6; border-radius: 8px; background: #fbfaf5; box-shadow: 0 22px 70px rgba(24, 41, 31, .3); }
@@ -301,21 +301,23 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .field .help { color: #a2a89d; font-size: 7px; line-height: 1.4; }
 .editor-footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 15px; padding: 12px 23px; border-top: 1px solid #e4e5db; color: #99a095; background: #f7f6f0; font-size: 8px; }
 .editor-footer > div { display: flex; align-items: center; gap: 8px; }
-.reference-backdrop { z-index: 3100; }
-.reference-modal { position: relative; width: min(760px, 100%); overflow: hidden; border: 1px solid #e3e2d6; border-radius: 7px; background: #fbfaf5; box-shadow: 0 22px 70px rgba(24, 41, 31, .3); }
-.reference-modal > img { display: block; width: 100%; max-height: 65vh; object-fit: cover; object-position: center 44%; }
-.reference-modal > div { padding: 17px 20px 21px; }
-.reference-modal h2 { margin: 4px 0 5px; font-family: "Kalam", cursive; font-size: 22px; font-weight: 400; }
-.reference-modal p { margin: 0; color: #879389; font-size: 10px; line-height: 1.6; }
-.reference-close { position: absolute; z-index: 2; top: 12px; right: 12px; border-color: rgba(255,255,255,.4); color: white; background: rgba(35,59,46,.55); }
-.reference-close:hover { color: #fff; background: rgba(35,59,46,.8); }
 body.modal-open { overflow: hidden; }
+.delete-backdrop { z-index: 3050; }
+.delete-modal { width: min(410px, 100%); padding: 25px 27px 20px; border: 1px solid #e8dfd5; border-radius: 8px; text-align: center; background: #fbfaf5; box-shadow: 0 22px 70px rgba(24, 41, 31, .3); }
+.delete-illustration { width: 46px; height: 46px; display: grid; place-items: center; margin: 0 auto 12px; border: 1px dashed #d5aa9a; border-radius: 50%; color: #b46653; background: #f8ebe5; transform: rotate(-4deg); }
+.delete-illustration svg { width: 19px; height: 19px; }
+.delete-modal h2 { margin: 7px 0 6px; font-family: "Manrope", sans-serif; font-size: 19px; letter-spacing: -.055em; }
+.delete-modal p { max-width: 300px; margin: 0 auto; color: #8b958b; font-size: 10px; line-height: 1.6; }
+.delete-target { margin: 15px 0 17px; padding: 9px 10px; border: 1px dashed #e1d8c9; border-radius: 4px; color: #657b69; background: #f8f6ee; font-size: 10px; font-weight: 700; }
+.delete-modal footer { display: flex; justify-content: center; gap: 8px; padding-top: 13px; border-top: 1px solid #ebe7de; }
+.button-delete { color: #fffaf5; background: #a95645; box-shadow: 0 3px 0 #854337; }
+.button-delete:hover { background: #974b3d; }
+.button-delete svg { width: 13px; height: 13px; }
 
 @media (max-width: 1280px) {
   .workspace { grid-template-columns: minmax(274px, 300px) minmax(360px, 1fr); }
   .detail-panel { position: absolute; z-index: 1100; top: 104px; right: 25px; bottom: 27px; width: min(352px, calc(100vw - 340px)); box-shadow: 0 12px 35px rgba(42, 60, 48, .18); }
   .close-detail { display: grid; }
-  .reference-card { bottom: 57px; }
   .map-legend { bottom: 13px; }
 }
 @media (max-width: 920px) {
@@ -356,9 +358,6 @@ body.modal-open { overflow: hidden; }
   .map-panel { height: 58vh; min-height: 410px; }
   .map-legend { left: 8px; bottom: 8px; gap: 7px; padding: 7px; font-size: 7px; }
   .legend-title { display: none; }
-  .reference-card { right: 8px; bottom: 8px; width: 143px; min-height: 52px; gap: 6px; }
-  .reference-card img { width: 40px; height: 40px; flex-basis: 40px; }
-  .reference-copy b { font-size: 10px; }
   .map-hint { max-width: 190px; right: 8px; top: 8px; font-size: 8px; }
   .map-top-note { left: 8px; top: 8px; }
   .editor-fields { grid-template-columns: 1fr; padding: 12px; }
